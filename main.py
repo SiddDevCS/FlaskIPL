@@ -1,16 +1,18 @@
 from flask import Flask, request, render_template_string, make_response
 from datetime import datetime
 import logging
+
+
 import requests
 from user_agents import parse
 import socket
 
 app = Flask(__name__)
 
-# Configure logging
+# config logging
 logging.basicConfig(filename='visitor_logs.txt', level=logging.INFO)
 
-# Get IP location and network info
+# get IP location and network info function
 def get_ip_data(ip):
     try:
         response = requests.get(f'https://ipapi.co/{ip}/json/', timeout=5)
@@ -21,10 +23,16 @@ def get_ip_data(ip):
     return {}
 
 @app.route('/')
+
+
 def logger():
+    
     ip = request.headers.get('X-Forwarded-For', request.remote_addr)
+
+    
     user_agent_string = request.headers.get('User-Agent')
     referrer = request.referrer or "None"
+
     timestamp = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')
 
     user_agent = parse(user_agent_string)
@@ -45,6 +53,7 @@ def logger():
         'Country': ip_info.get('country_name', 'Unknown'),
         'Latitude': ip_info.get('latitude', 'Unknown'),
         'Longitude': ip_info.get('longitude', 'Unknown'),
+        
         'Timezone': ip_info.get('timezone', 'Unknown'),
         'ASN': ip_info.get('asn', 'Unknown'),
         'ISP/Org': ip_info.get('org', 'Unknown'),
@@ -55,11 +64,13 @@ def logger():
         'Referrer': referrer
     }
 
-    # Save to log file
+    # saving log file
     log_line = "\n".join(f"{k}: {v}" for k, v in log_data.items()) + "\n" + "-"*50 + "\n"
+
+    
     logging.info(log_line)
 
-    # Render a custom HTML message instead of redirecting
+    # custom html/css page
     html_content = """
     <html>
     <head>
@@ -92,6 +103,7 @@ def logger():
     response = make_response(html_content)
     response.headers['Referrer-Policy'] = 'no-referrer'
     response.headers['Cache-Control'] = 'no-store'
+    
     return response
 
 if __name__ == '__main__':
